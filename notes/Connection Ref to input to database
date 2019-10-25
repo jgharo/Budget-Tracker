@@ -1,0 +1,80 @@
+// Makes non-static to static
+        BudgetTracker conn = new BudgetTracker();
+        conn.connect();
+
+
+try {
+            // connection string
+            Connection con = DriverManager.getConnection("jdbc:sqlite:budget_tracker.identifier.sqlite");
+            Statement st = con.createStatement();
+            ResultSet rs = st.executeQuery("SELECT * month, salary, otherIncome, groceries, rent, utilities, misc" + "FROM Budget_Tracker_Input");
+
+            st.executeUpdate("insert into Register VALUES('"
+                    + txtMon.getText() + "','" + frmtxtSalary.getText() + "','"
+                    + frmtxtOtherInc.getText() + "','" + "','" + frmtxtFood.getText() + "','" + frmtxtRent.getText()
+                    + "','" + frmtxtUtilities.getText() + "','" + frmtxtMisc.getText() + "')");
+
+            JOptionPane.showConfirmDialog(null, "Your Data Has been Saved.",
+                    "Result", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+
+            st.close();
+            con.close();
+
+        }
+
+        catch (Exception e1)
+
+        {
+            System.out.println("Exception:" + e1);
+        }
+
+
+// loop through the result set
+                    while (rs.next()) {
+                        System.out.println(rs.getInt("id") + "\t" +
+                                rs.getDouble("salary") + "\t" +
+                                rs.getDouble("otherIncome") + "\t" +
+                                rs.getDouble("groceries") + "\t" +
+                                rs.getDouble("rent") + "\t" +
+                                rs.getDouble("utilities") + "\t" +
+                                rs.getDouble("misc"));
+                    }
+                } catch (SQLException e) {
+                    System.out.println(e.getMessage());
+                }
+
+// input from textfield to database ref
+
+String sql = "INSERT INTO monthly_budget(month, salary, otherIncome, groceries, rent, utilities, misc) VALUES(?,?)";
+
+        String month = txtMon.getText();
+        String salMon = frmtxtSalary.getText();
+        String otherIncMon = frmtxtOtherInc.getText();
+        String foodMon = frmtxtFood.getText();
+        String rentMon = frmtxtRent.getText();
+        String utilMon = frmtxtMisc.getText();
+        String miscMon = frmtxtMisc.getText();
+
+        int newMonth = Integer.parseInt(month);
+        double newSalMon = Double.parseDouble(salMon);
+        double newOtherIncMon = Double.parseDouble(otherIncMon);
+        double newFoodMon = Double.parseDouble(foodMon);
+        double newRentMon = Double.parseDouble(rentMon);
+        double newUtilMon = Double.parseDouble(utilMon);
+        double newMiscMon = Double.parseDouble(miscMon);
+
+        try (Connection conn = this.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, newMonth);
+            pstmt.setDouble(2, newSalMon);
+            pstmt.setDouble(3, newOtherIncMon);
+            pstmt.setDouble(4, newFoodMon);
+            pstmt.setDouble(5, newRentMon);
+            pstmt.setDouble(6, newUtilMon);
+            pstmt.setDouble(7, newMiscMon);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }

@@ -1,0 +1,433 @@
+public void selectMonInc() {
+        String sql = "SELECT salary, otherIncome, groceries, rent, utilities, misc, monYr FROM monthly_budget";
+
+        try (Connection conn = this.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            double sal_col = rs.getDouble("salary");
+            String newSalMon1 = Double.toString(sal_col);
+
+            double otherInc_col = rs.getDouble("otherIncome");
+            String newOtherIncMon1 = Double.toString(otherInc_col);
+
+            double food_col = rs.getDouble("groceries");
+            String newFoodMon1 = Double.toString(food_col);
+
+
+            double rent_col = rs.getDouble("rent");
+            String newRentMon1 = Double.toString(rent_col);
+
+
+            double util_col = rs.getDouble("utilities");
+            String newUtilMon1 = Double.toString(util_col);
+
+            double misc_col = rs.getDouble("misc");
+            String newMiscMon1 = Double.toString(misc_col);
+
+            int mon_col = rs.getInt("monYr");
+            String newMonth1 = Integer.toString(mon_col);
+
+            frmtxtSalary.setText(newSalMon1);
+            frmtxtOtherInc.setText(newOtherIncMon1);
+            frmtxtFood.setText(newFoodMon1);
+            frmtxtRent.setText(newRentMon1);
+            frmtxtUtilities.setText(newUtilMon1);
+            frmtxtMisc.setText(newMiscMon1);
+            txtMon.setText(newMonth1);
+
+            // loop through the result set
+            while (rs.next()) {
+
+
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    public void selectAllReport() {
+        String sql = "SELECT monInc, otherIncome, net FROM monthly_report";
+
+        try (Connection conn = this.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            // loop through the result set
+            while (rs.next()) {
+
+                double monInc_col = rs.getDouble("monInc");
+                String newMonInc = Double.toString(monInc_col);
+
+                double monExp_col = rs.getDouble("otherIncome");
+                String newMonExp = Double.toString(monExp_col);
+
+                double net_col = rs.getDouble("net");
+                String newNet = Double.toString(net_col);
+
+                txtCurExp.setText(newMonInc);
+                txtCurInc.setText(newMonExp);
+                txtNet.setText(newNet);
+            }
+            while () {
+
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+
+
+Connection con = null;
+        ResultSet rs = null;
+        Statement stmt = null;
+        int curRow = 0;
+
+        String month = txtMon.getText();
+        String salMon = frmtxtSalary.getText();
+        String otherIncMon = frmtxtOtherInc.getText();
+        String foodMon = frmtxtFood.getText();
+        String rentMon = frmtxtRent.getText();
+        String utilMon = frmtxtMisc.getText();
+        String miscMon = frmtxtMisc.getText();
+
+        int newMonth = Integer.parseInt(month);
+        double newSalMon = Double.parseDouble(salMon);
+        double newOtherIncMon = Double.parseDouble(otherIncMon);
+        double newFoodMon = Double.parseDouble(foodMon);
+        double newRentMon = Double.parseDouble(rentMon);
+        double newUtilMon = Double.parseDouble(utilMon);
+        double newMiscMon = Double.parseDouble(miscMon);
+
+        try {
+            // create a connection to the database
+            con = DriverManager.getConnection("jdbc:sqlite:budget_tracker.identifier.sqlite");
+
+            stmt = con.createStatement();
+            String sql = "SELECT t.* FROM Budget_Tracker_Input t LIMIT 501";
+            rs = stmt.executeQuery(sql);
+            System.out.println("Connection to SQLite has been established.");
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            System.exit(0);
+        } finally {
+            try {
+                if (con != null) {
+                    con.close();
+                }
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+        try {
+            curRow = rs.getRow();
+
+            txtMon.setText("");
+            frmtxtSalary.setText("");
+            frmtxtOtherInc.setText("");
+            frmtxtFood.setText("");
+            frmtxtRent.setText("");
+            frmtxtUtilities.setText("");
+            frmtxtMisc.setText("");
+
+            calcBtn.setEnabled(false);
+            reportBtn.setEnabled(false);
+            saveBtn.setEnabled(true);
+
+        } catch (SQLException err) {
+            System.out.println(err.getMessage());
+        }
+        try {
+            rs.absolute(curRow);
+            txtMon.setText(rs.getString("month"));
+            frmtxtSalary.setText(rs.getString("salary"));
+            frmtxtOtherInc.setText(rs.getString("otherIncome"));
+            frmtxtFood.setText(rs.getString("groceries"));
+            frmtxtRent.setText(rs.getString("rent"));
+            frmtxtUtilities.setText(rs.getString("utilities"));
+            frmtxtMisc.setText(rs.getString("misc"));
+
+            calcBtn.setEnabled(true);
+            reportBtn.setEnabled(true);
+            saveBtn.setEnabled(false);
+        } catch (SQLException err) {
+            System.out.println(err.getMessage());
+        }
+        try {
+            rs.moveToInsertRow();
+
+            rs.updateInt("month", newMonth);
+            rs.updateDouble("salary", newSalMon);
+            rs.updateDouble("otherIncome", newOtherIncMon);
+            rs.updateDouble("groceries", newFoodMon);
+            rs.updateDouble("rent", newRentMon);
+            rs.updateDouble("utilities", newUtilMon);
+            rs.updateDouble("misc", newMiscMon);
+
+            rs.insertRow();
+
+            stmt.close();
+            rs.close();
+
+            stmt = con.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_UPDATABLE);
+            String sql = "SELECT * FROM Budget_Tracker_Input";
+            rs = stmt.executeQuery(sql);
+
+            rs.next();
+
+            int mon_col = rs.getInt("month");
+            String newMonth1 = Integer.toString(mon_col);
+
+            double sal_col = rs.getDouble("salary");
+            String newSalMon1 = Double.toString(sal_col);
+
+            double otherInc_col = rs.getDouble("otherIncome");
+            String newOtherIncMon1 = Double.toString(otherInc_col);
+
+            double food_col = rs.getDouble("groceries");
+            String newFoodMon1 = Double.toString(food_col);
+
+
+            double rent_col = rs.getDouble("rent");
+            String newRentMon1 = Double.toString(rent_col);
+
+
+            double util_col = rs.getDouble("utilities");
+            String newUtilMon1 = Double.toString(util_col);
+
+            double misc_col = rs.getDouble("misc");
+            String newMiscMon1 = Double.toString(misc_col);
+
+            txtMon.setText(newMonth1);
+            frmtxtSalary.setText(newSalMon1);
+            frmtxtOtherInc.setText(newOtherIncMon1);
+            frmtxtFood.setText(newFoodMon1);
+            frmtxtRent.setText(newRentMon1);
+            frmtxtUtilities.setText(newUtilMon1);
+            frmtxtMisc.setText(newMiscMon1);
+
+            calcBtn.setEnabled(true);
+            reportBtn.setEnabled(true);
+            saveBtn.setEnabled(false);
+
+        } catch (SQLException err) {
+            System.out.println(err.getMessage());
+        }
+    }
+
+
+//ref
+
+public void update() {
+
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+        try (Connection con = DriverManager.getConnection(url);
+             Statement st = con.createStatement()) {
+
+            st.executeUpdate("UPDATE monthly_budget SET WHERE('"
+                    + txtMon.getText() + "','" + frmtxtSalary.getText() + "','"
+                    + frmtxtOtherInc.getText() + "','"
+                    + "','" + frmtxtFood.getText() + "','" + frmtxtRent.getText()
+                    + "','" + frmtxtUtilities.getText() + "','" + frmtxtMisc.getText()
+                    + "')");
+
+            JOptionPane.showConfirmDialog(null, "Your Data Has been Updated",
+                    "Result", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public void delete() {
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+        try (Connection con = DriverManager.getConnection(url);
+             Statement st = con.createStatement()) {
+
+            st.executeUpdate("DELETE FROM monthly_budget WHERE('"
+                    + txtMon.getText() + "','" + frmtxtSalary.getText() + "','"
+                    + frmtxtOtherInc.getText() + "','"
+                    + "','" + frmtxtFood.getText() + "','" + frmtxtRent.getText()
+                    + "','" + frmtxtUtilities.getText() + "','" + frmtxtMisc.getText()
+                    + "')");
+
+            JOptionPane.showConfirmDialog(null, "Your Data Has been Deleted",
+                    "Result", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+
+    // main
+
+    BudgetTracker up = new BudgetTracker();
+            up.update();
+
+            BudgetTracker del = new BudgetTracker();
+            del.delete();
+
+
+
+
+            deleteBtn.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            delete();
+                        }
+                    });
+                    updateBtn.addActionListener(new ActionListener() {
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            update();
+                        }
+                    });
+
+
+             public void insert() {
+
+                     String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+                     try (Connection con = DriverManager.getConnection(url);
+                          Statement st = con.createStatement()) {
+
+                         st.executeUpdate("insert into monthly_budget VALUES('"
+                                 + txtMon.getText() + "','" + frmtxtSalary.getText() + "','"
+                                 + frmtxtOtherInc.getText() + "','"
+                                 + "','" + frmtxtFood.getText() + "','" + frmtxtRent.getText()
+                                 + "','" + frmtxtUtilities.getText() + "','" + frmtxtMisc.getText()
+                                 + "')");
+
+                         JOptionPane.showConfirmDialog(null, "Your Data Has been Saved",
+                                 "Result", JOptionPane.DEFAULT_OPTION,
+                                 JOptionPane.PLAIN_MESSAGE);
+
+                     } catch (SQLException e) {
+                         System.out.println(e.getMessage());
+                     }
+                 }
+
+
+                 saveBtn.addActionListener(new ActionListener() {
+                             @Override
+                             public void actionPerformed(ActionEvent e) {
+                                 insert();
+                             }
+                         });
+
+
+                         BudgetTracker ins = new BudgetTracker();
+                                 ins.insert();
+
+
+
+ public static void createNewTable() {
+         // SQLite connection string
+         String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+         // SQL statement for creating a new table
+         String sql = "CREATE TABLE IF NOT EXISTS monthly_budget (\n"
+                 + "month text PRIMARY KEY,\n"
+                 + "salary real NOT NULL, \n"
+                 + "otherIncome real NOT NULL,\n"
+                 + "groceries real NOT NULL,\n"
+                 + "rent real NOT NULL,\n"
+                 + "utilities real NOT NULL,\n"
+                 + "misc real \n"
+                 + ");";
+
+         try (Connection conn = DriverManager.getConnection(url);
+              Statement stmt = conn.createStatement()) {
+             // create a new table
+             stmt.execute(sql);
+         } catch (SQLException e) {
+             System.out.println(e.getMessage());
+         }
+     }
+
+     createNewTable();
+
+
+     public void selectAll() {
+             String sql = "SELECT month, salary, otherIncome, groceries, rent, utilities, misc FROM monthly_budget";
+
+             try (Connection conn = this.connect();
+                  Statement stmt = conn.createStatement();
+                  ResultSet rs = stmt.executeQuery(sql)) {
+
+                 // loop through the result set
+                 while (rs.next()) {
+                     int mon_col = rs.getInt("month");
+                     String newMonth1 = Integer.toString(mon_col);
+
+                     double sal_col = rs.getDouble("salary");
+                     String newSalMon1 = Double.toString(sal_col);
+
+                     double otherInc_col = rs.getDouble("otherIncome");
+                     String newOtherIncMon1 = Double.toString(otherInc_col);
+
+                     double food_col = rs.getDouble("groceries");
+                     String newFoodMon1 = Double.toString(food_col);
+
+
+                     double rent_col = rs.getDouble("rent");
+                     String newRentMon1 = Double.toString(rent_col);
+
+
+                     double util_col = rs.getDouble("utilities");
+                     String newUtilMon1 = Double.toString(util_col);
+
+                     double misc_col = rs.getDouble("misc");
+                     String newMiscMon1 = Double.toString(misc_col);
+
+                     txtMon.setText(newMonth1);
+                     frmtxtSalary.setText(newSalMon1);
+                     frmtxtOtherInc.setText(newOtherIncMon1);
+                     frmtxtFood.setText(newFoodMon1);
+                     frmtxtRent.setText(newRentMon1);
+                     frmtxtUtilities.setText(newUtilMon1);
+                     frmtxtMisc.setText(newMiscMon1);
+                 }
+             } catch (SQLException e) {
+                 System.out.println(e.getMessage());
+             } catch (ClassNotFoundException e) {
+                 e.printStackTrace();
+             }
+         }
+
+         BudgetTracker app = new BudgetTracker();
+                 app.selectAll();
+
+// connect to database
+
+// connecting to database
+    private Connection connect() throws ClassNotFoundException {
+        // SQLite connection string
+        Class.forName("org.sqlite.SQLiteJDBCLoader");
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(url);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return conn;
+    }
+
+
+    String sql = "SELECT salary, otherIncome, groceries, rent, utilities, misc, monYr FROM monthly_budget";
+    Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery(sql))

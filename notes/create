@@ -1,0 +1,211 @@
+// Creating view; report
+public void createTotalNet() {
+        String sql = "SELECT salary, otherIncome, groceries, rent, utilities, misc, monYr FROM monthly_budget";
+
+        try (Connection conn = this.connect();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            // loop through the result set
+            while (rs.next()) {
+
+                stmt.executeUpdate("CREATE VIEW \"totalNet\" AS\n" +
+                        "    SELECT monYr, salary AS 'S', otherIncome AS 'OI', groceries AS 'G', rent AS 'R', utilities AS 'U', misc AS 'M',\n" +
+                        "    salary + otherIncome,\n" +
+                        "    groceries + rent + utilities + misc,\n" +
+                        "    (salary + otherIncome) - (groceries + rent + utilities + misc),\n" +
+                        "    CASE WHEN ((salary + otherIncome) - (groceries + rent + utilities + misc) > 0)\n" +
+                        "        THEN 'Gain' ELSE 'Loss' END AS 'Gain/Loss'\n" +
+                        "    FROM monthly_budget;");
+
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+    // put in main
+    BudgetReport totNet = new BudgetReport();
+            totNet.createTotalNet();
+
+// Database Creation; gui
+public static void createNewDatabase(String fileName) {
+
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite" + fileName;
+
+        try (Connection conn = DriverManager.getConnection(url)) {
+            if (conn != null) {
+                DatabaseMetaData meta = conn.getMetaData();
+                System.out.println("The driver name is " + meta.getDriverName());
+                System.out.println("A new database has been created.");
+            }
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //put into main
+    createNewDatabase("budget_tracker.db");
+
+
+// Table Creation; gui
+public static void createNewTable() {
+        // SQLite connection string
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+        // SQL statement for creating a new table
+        String sql = "CREATE TABLE IF NOT EXISTS monthly_budget (\n"
+                + "salary real NOT NULL, \n"
+                + "otherIncome real NOT NULL,\n"
+                + "groceries real NOT NULL,\n"
+                + "rent real NOT NULL,\n"
+                + "utilities real NOT NULL,\n"
+                + "misc real NOT NULL, \n"
+                + "monYr PRIMARY KEY"
+                + ");";
+
+        try (Connection conn = DriverManager.getConnection(url);
+             Statement stmt = conn.createStatement()) {
+            // create a new table
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    //put into main
+    createNewTable();
+
+
+// report table; report
+public static void createNewTableReport() {
+            // SQLite connection string
+            String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+            // SQL statement for creating a new table
+            String sql = "CREATE TABLE IF NOT EXISTS monthly_report (\n"
+                    + "monInc real NOT NULL, \n"
+                    + "monExp real NOT NULL,\n"
+                    + "net real NOT NULL,\n"
+                    + "monYr PRIMARY KEY"
+                    + ");";
+
+            try (Connection conn = DriverManager.getConnection(url);
+                 Statement stmt = conn.createStatement()) {
+                // create a new table
+                stmt.execute(sql);
+            } catch (SQLException e) {
+                System.out.println(e.getMessage());
+            }
+        }
+    // put in main
+    BudgetReport nt = new BudgetReport();
+            nt.createNewTableReport();
+
+// inserting in sqlite
+
+INSERT INTO monthly_report SELECT
+    "salary + otherIncome",
+    "groceries + rent + utilities + misc",
+    "(salary + otherIncome) - (groceries + rent + utilities + misc)",
+    monYr
+FROM main.totalNet;
+
+//creating in sqlite
+CREATE TABLE "totalNet" AS
+    SELECT monYr, salary AS 'S', otherIncome AS 'OI', groceries AS 'G', rent AS 'R', utilities AS 'U', misc AS 'M',
+    salary + otherIncome,
+    groceries + rent + utilities + misc,
+    (salary + otherIncome) - (groceries + rent + utilities + misc),
+    CASE WHEN ((salary + otherIncome) - (groceries + rent + utilities + misc) > 0)
+        THEN 'Gain' ELSE 'Loss' END AS 'Gain/Loss'
+    FROM monthly_budget;
+
+
+
+
+// connecting to database
+    private Connection connect() throws ClassNotFoundException {
+        // SQLite connection string
+        Class.forName("org.sqlite.SQLiteJDBCLoader");
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+        Connection conn = null;
+        try {
+            conn = DriverManager.getConnection(url);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        return conn;
+    }
+
+    public static void Report() {
+            EventQueue.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        BudgetReport rprt = new BudgetReport();
+                        rprt.frame.setVisible(true);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                    JFrame frame = new JFrame("Budget Report");
+                    frame.setContentPane(new BudgetReport().report);
+                    frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                    frame.setSize(500, 400);
+                    frame.setVisible(true);
+                }
+            });
+
+        }
+
+
+// insert data into monthly_report
+public void insertTotal() {
+
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+        try (Connection con = DriverManager.getConnection(url);
+             Statement st = con.createStatement()) {
+
+            st.executeUpdate("INSERT INTO monthly_report SELECT \"salary + otherIncome\", " +
+                    "\"groceries + rent + utilities + misc\", " +
+                    "\"(salary + otherIncome) - (groceries + rent + utilities + misc)\", " +
+                    "monYr " +
+                    "FROM totalMonNet;");
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+// insert method
+public void insert() {
+
+        String url = "jdbc:sqlite:budget_tracker.identifier.sqlite";
+
+        try (Connection con = DriverManager.getConnection(url);
+             Statement st = con.createStatement()) {
+
+
+            st.executeUpdate("INSERT INTO monthly_budget VALUES('"
+                    + frmtxtSalary.getText()
+                    + "','" + frmtxtOtherInc.getText()
+                    + "','" + frmtxtFood.getText()
+                    + "','" + frmtxtRent.getText()
+                    + "','" + frmtxtUtilities.getText()
+                    + "','" + frmtxtMisc.getText()
+                    + "','" + txtMon.getText()
+                    + "')");
+
+            JOptionPane.showConfirmDialog(null, "Saved",
+                    "Result", JOptionPane.DEFAULT_OPTION,
+                    JOptionPane.PLAIN_MESSAGE);
+
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
